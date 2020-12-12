@@ -6,7 +6,7 @@
  * @flow strict-local
  */
 
-import React from 'react';
+import React, {useState} from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -27,41 +27,102 @@ import {
 } from 'react-native/Libraries/NewAppScreen';
 
 const App: () => React$Node = () => {
+  const [resultText, setResultText] = useState('');
+  const [calculationText, setCalculationText] = useState('');
+
   let rows = [];
   let nums = [
-    [1, 2, 3],
-    [4, 5, 6],
     [7, 8, 9],
-    [0, 0, '='],
+    [4, 5, 6],
+    [1, 2, 3],
+    ['.', 0, '='],
   ];
-  let operations = ['+', '-', '*', '/'];
-  let ops = [];
+
+  //For the numbers pad
   for (let i = 0; i < 4; i++) {
-    ops.push(
-      <TouchableOpacity style={styles.btn}>
-        <Text style={(styles.btntext, styles.white)}>{operations[i]}</Text>
-      </TouchableOpacity>,
-    );
     let row = [];
     for (let j = 0; j < 3; j++) {
       row.push(
-        <TouchableOpacity style={styles.btn}>
+        <TouchableOpacity
+          key={nums[i][j]}
+          onPress={() => buttonPressed(nums[i][j])}
+          style={styles.btn}>
           <Text style={styles.btntext}>{nums[i][j]}</Text>
         </TouchableOpacity>,
       );
     }
-    rows.push(<View style={styles.row}>{row}</View>);
+    rows.push(
+      <View key={i} style={styles.row}>
+        {row}
+      </View>,
+    );
   }
+  // For the operations column
+  let operations = ['Del', '+', '-', '*', '/'];
+  let ops = [];
+  for (let i = 0; i < 5; i++) {
+    ops.push(
+      <TouchableOpacity
+        key={operations[i]}
+        style={styles.btn}
+        onPress={() => operate(operations[i])}>
+        <Text style={(styles.btntext, styles.white)}>{operations[i]}</Text>
+      </TouchableOpacity>,
+    );
+  }
+
+  const calculateResult = () => {
+    const text = resultText;
+    //can use teval here as we have taken care of the input here
+    setCalculationText(`${eval(text)}`);
+  };
+
+  const validate = () => {
+    const text = resultText;
+    switch (text.slice(-1)) {
+      case '+':
+      case '-':
+      case '*':
+      case '/':
+        return false;
+    }
+    return true;
+  };
+
+  const buttonPressed = (text) => {
+    if (text == '=') {
+      return validate() && calculateResult();
+    }
+    setResultText(`${resultText}${text}`);
+  };
+
+  const operate = (operation) => {
+    switch (operation) {
+      case 'Del':
+        let text = resultText.split('');
+        text.pop();
+        setResultText(text.join(''));
+        break;
+      case '+':
+      case '-':
+      case '*':
+      case '/':
+        const lastChar = resultText.split('').pop();
+        if (operations.indexOf(lastChar) > 0) return;
+        if (resultText == '') return;
+        setResultText(`${resultText}${operation}`);
+    }
+  };
 
   return (
     <>
       <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.container}>
         <View style={styles.result}>
-          <Text style={styles.resultText}>11*4</Text>
+          <Text style={styles.resultText}>{resultText}</Text>
         </View>
         <View style={styles.calculation}>
-          <Text style={styles.calculationText}>44</Text>
+          <Text style={styles.calculationText}>{calculationText}</Text>
         </View>
         <View style={styles.buttons}>
           <View style={styles.numbers}>{rows}</View>
@@ -75,17 +136,23 @@ const App: () => React$Node = () => {
 const styles = StyleSheet.create({
   btntext: {
     fontSize: 30,
+    color: 'white',
+  },
+  btn: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   container: {
     flex: 1,
   },
   calculationText: {
-    fontSize: 24,
-    color: 'white',
+    fontSize: 30,
+    color: 'black',
   },
   resultText: {
-    fontSize: 30,
-    color: 'white',
+    fontSize: 36,
+    color: 'black',
   },
   row: {
     flexDirection: 'row',
@@ -95,13 +162,13 @@ const styles = StyleSheet.create({
   },
   result: {
     flex: 2,
-    backgroundColor: 'red',
+    backgroundColor: 'white',
     alignItems: 'flex-end',
     justifyContent: 'center',
   },
   calculation: {
     flex: 1,
-    backgroundColor: 'green',
+    backgroundColor: 'white',
     alignItems: 'flex-end',
     justifyContent: 'center',
   },
@@ -111,15 +178,17 @@ const styles = StyleSheet.create({
   },
   numbers: {
     flex: 3,
-    backgroundColor: 'yellow',
+    backgroundColor: '#434343',
+    color: 'white',
   },
   operations: {
     flex: 1,
     justifyContent: 'space-around',
-    backgroundColor: 'blue',
+    backgroundColor: 'orange',
   },
   white: {
     color: 'white',
+    fontSize: 30,
   },
 });
 
